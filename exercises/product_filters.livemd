@@ -301,22 +301,22 @@ defmodule ProductsTest do
   end
 
   test "filter/2 by exact matching name" do
-    assert Products.filter(@products, %{name: "Laptop"}) ==
+    assert Products.filter(@products, name: "Laptop") ==
              [%{name: "Laptop", category: :tech, price: 100_000}]
   end
 
   test "filter/2 by partial matching name" do
-    assert Products.filter(@products, %{name: "Lap"}) ==
+    assert Products.filter(@products, name: "Lap") ==
              [%{name: "Laptop", category: :tech, price: 100_000}]
   end
 
   test "filter/2 by mixed case partial matching name" do
-    assert Products.filter(@products, %{name: "LaPtOp"}) ==
+    assert Products.filter(@products, name: "LaPtOp") ==
              [%{name: "Laptop", category: :tech, price: 100_000}]
   end
 
   test "filter/2 by category" do
-    assert Products.filter(@products, %{category: :tech}) ==
+    assert Products.filter(@products, category: :tech) ==
              [
                %{name: "Laptop", category: :tech, price: 100_000},
                %{name: "Phone", category: :tech, price: 50000}
@@ -324,7 +324,7 @@ defmodule ProductsTest do
   end
 
   test "filter/2 by min price" do
-    assert Products.filter(@products, %{min: 201}) == [
+    assert Products.filter(@products, min: 201) == [
              %{name: "Laptop", category: :tech, price: 100_000},
              %{name: "Phone", category: :tech, price: 50000},
              %{name: "Shampoo", category: :health, price: 1000}
@@ -332,21 +332,21 @@ defmodule ProductsTest do
   end
 
   test "filter/2 by max price" do
-    assert Products.filter(@products, %{max: 2000}) == [
+    assert Products.filter(@products, max: 2000) == [
              %{name: "Chocolate", category: :snacks, price: 200},
              %{name: "Shampoo", category: :health, price: 1000}
            ]
   end
 
   test "filter/2 by max and min price" do
-    assert Products.filter(@products, %{min: 201, max: 80000}) == [
+    assert Products.filter(@products, min: 201, max: 80000) == [
              %{name: "Phone", category: :tech, price: 50000},
              %{name: "Shampoo", category: :health, price: 1000}
            ]
   end
 
   test "filter/2 all filters" do
-    assert Products.filter(@products, %{name: "T", category: :snacks, min: 201, max: 150_000}) ==
+    assert Products.filter(@products, name: "T", category: :snacks, min: 201, max: 150_000) ==
              []
   end
 end
