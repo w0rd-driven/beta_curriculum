@@ -3,7 +3,8 @@
 ```elixir
 Mix.install([
   {:youtube, github: "brooklinjazz/youtube"},
-  {:hidden_cell, github: "brooklinjazz/hidden_cell"}
+  {:hidden_cell, github: "brooklinjazz/hidden_cell"},
+  {:tested_cell, github: "brooklinjazz/tested_cell"}
 ])
 ```
 
@@ -58,7 +59,7 @@ In the Elixir cell below, create a string `"Hello, world!"`. This is a rite of p
 programmer.
 
 ```elixir
-
+"Hello, world!"
 ```
 
 ## String Operators
@@ -97,7 +98,7 @@ Replace `nil` with your answer.
 </details>
 
 ```elixir
-
+"Hi " <> "Peter."
 ```
 
 ### String Interpolation
@@ -137,7 +138,7 @@ In the Elixir cell below, use **string interpolation** to say `I have #{X - 1} c
 </details>
 
 ```elixir
-answer = nil
+answer = "I have #{30 - 1} classmates."
 ```
 
 ## Commit Your Progress
