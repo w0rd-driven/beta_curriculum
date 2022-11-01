@@ -70,7 +70,9 @@ high = 1
 Enter your solution below.
 
 ```elixir
-
+low = -1
+normal = 0
+high = 1
 ```
 
 ## High Card
@@ -90,7 +92,8 @@ initial_count + high
 Enter your solution below.
 
 ```elixir
-
+initial_count = 0
+count = initial_count + high
 ```
 
 ## Low Card
@@ -110,7 +113,8 @@ initial_count + low
 Enter your solution below.
 
 ```elixir
-
+initial_count = 0
+count = initial_count + low
 ```
 
 ## Multiple Cards
@@ -132,7 +136,8 @@ You could omit the **normal** cards or allow **high** and **low** cards to balan
 Enter your solution below.
 
 ```elixir
-
+initial_count = 5
+count = initial_count + 5 * high + 2 * low + 2 * normal
 ```
 
 ## Bonus: Determining Card Values
@@ -174,7 +179,31 @@ You could omit the **normal** cards or allow **high** and **low** cards to balan
 Enter your solution below.
 
 ```elixir
+initial_count = 0
+card1 = Enum.random(1..13)
+card2 = Enum.random(1..13)
+card3 = Enum.random(1..13)
 
+list = [card1, card2, card3]
+
+count =
+  Enum.map(list, fn card ->
+    # I know this is possible but it's escaping me
+    # cond do
+    #   card in [1..6] -> low
+    #   card in [10..13] -> high
+    #   true -> normal
+    # end
+
+    cond do
+      card <= 6 -> low
+      card >= 10 -> high
+      true -> normal
+    end
+  end)
+  |> Enum.sum()
+
+initial_count + count
 ```
 
 ## Commit Your Progress
