@@ -30,7 +30,7 @@ MapSet.new([1, 2, 3])
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) to create an empty mapset.
 
 ```elixir
-MapSet.new()
+MapSet.new([])
 ```
 
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) to create a mapset with the integers `1` to `10`.
@@ -59,21 +59,21 @@ Use [MapSet.put/2](https://hexdocs.pm/elixir/MapSet.html#put/2) to put the eleme
 
 ```elixir
 mapset = MapSet.new(["b", "c"])
+mapset |> MapSet.put("a")
 ```
 
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) and [MapSet.put/2](https://hexdocs.pm/elixir/MapSet.html#put/2) to put `1` into a [MapSet](https://hexdocs.pm/elixir/MapSet.html) containing the elements `2` and `3`.
 
 ```elixir
 mapset = MapSet.new([2, 3])
-MapSet.put(mapset, 1)
+mapset |> MapSet.put(1)
 ```
 
 Use [MapSet.put/2](https://hexdocs.pm/elixir/MapSet.html#put/2) twice with the element `1` on an empty mapset to demonstrate that the MapSet only contains unique values.
 
 ```elixir
-empty_mapset = MapSet.new([])
-MapSet.put(empty_mapset, 1)
-MapSet.put(empty_mapset, 1)
+mapset = MapSet.new([])
+mapset |> MapSet.put(1) |> MapSet.put(1)
 ```
 
 ## MapSet.delete/2
@@ -82,9 +82,15 @@ Use [MapSet.delete/2](https://hexdocs.pm/elixir/MapSet.html#delete/2) to delete 
 
 ```elixir
 mapset = MapSet.new([1])
+mapset |> MapSet.delete(1)
 ```
 
 Use [MapSet.delete/2](https://hexdocs.pm/elixir/MapSet.html#delete/2) and [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) to create a mapset with elements from `1` to `6` then delete the `6` element.
+
+```elixir
+mapset = MapSet.new(1..6)
+mapset |> MapSet.delete(6)
+```
 
 ## MapSet.member?/2
 
@@ -92,21 +98,21 @@ Use [MapSet.member?/2](https://hexdocs.pm/elixir/MapSet.html#member?/2) to check
 
 ```elixir
 mapset = MapSet.new([1, 2, 3])
-MapSet.member?(mapset, 1)
+mapset |> MapSet.member?(1)
 ```
 
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) to create a mapset with elements from `1` to `10`. Then use [MapSet.member?/2](https://hexdocs.pm/elixir/MapSet.html#member?/2) to check if `11` is in the mapset.
 
 ```elixir
 mapset = MapSet.new(1..10)
-MapSet.member?(mapset, 11)
+mapset |> MapSet.member?(11)
 ```
 
 Use [MapSet.member?/2](https://hexdocs.pm/elixir/MapSet.html#member?/2) to check if `%{key: "value"}` is in the following mapset.
 
 ```elixir
 mapset = MapSet.new([%{key: "value"}])
-MapSet.member?(mapset, %{key: "value"})
+mapset |> MapSet.member?(%{key: "value"})
 ```
 
 ## MapSet.filter/2
@@ -115,21 +121,33 @@ Use [MapSet.filter/2](https://hexdocs.pm/elixir/MapSet.html#filter/2) to filter 
 
 ```elixir
 mapset = MapSet.new(["a", "b", "c", 1, 2, 3])
-MapSet.filter(mapset, fn value -> is_integer(value) end)
+
+mapset
+|> MapSet.filter(fn value ->
+  is_integer(value)
+end)
 ```
 
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) and [MapSet.filter/2](https://hexdocs.pm/elixir/MapSet.html#filter/2) to create a mapset with integers from `1` to `10`, then filter it to make a mapset with only even numbers.
 
 ```elixir
 mapset = MapSet.new(1..10)
-MapSet.filter(mapset, fn value -> rem(value, 2) == 0 end)
+
+mapset
+|> MapSet.filter(fn integer ->
+  rem(integer, 2) == 0
+end)
 ```
 
 Use [MapSet.filter/2](https://hexdocs.pm/elixir/MapSet.html#filter/2) to filter the following mapset to only include strings containing the letter `"a"`.
 
 ```elixir
 mapset = MapSet.new(["apple", "orange", "pear", "banana", "cherry", "fruit"])
-MapSet.filter(mapset, fn value -> String.contains?(value, "a") end)
+
+mapset
+|> MapSet.filter(fn value ->
+  String.contains?(value, "a")
+end)
 ```
 
 ## MapSet.equal?/2
@@ -138,14 +156,14 @@ Use [MapSet.equal?/2](https://hexdocs.pm/elixir/MapSet.html#equal?/2) to check i
 
 ```elixir
 mapset = MapSet.new([1])
+mapset |> MapSet.equal?(MapSet.new([1]))
 ```
 
 Use [MapSet.equal?/2](https://hexdocs.pm/elixir/MapSet.html#equal?/2) to check if `MapSet.new([1, 2, 3, 4, 5])` is equal to `MapSet.new(1..5)`.
 
 ```elixir
-list_mapset = MapSet.new([1, 2, 3, 4, 5])
-range_mapset = MapSet.new(1..5)
-MapSet.equal?(list_mapset, range_mapset)
+mapset = MapSet.new([1, 2, 3, 4, 5])
+mapset |> MapSet.equal?(MapSet.new(1..5))
 ```
 
 Use [MapSet.new/2](https://hexdocs.pm/elixir/MapSet.html#new/2) to create an empty mapset, then [MapSet.put/2](https://hexdocs.pm/elixir/MapSet.html#put/2) to add `1` to the mapset.
@@ -153,8 +171,7 @@ Then use [MapSet.equal?/2](https://hexdocs.pm/elixir/MapSet.html#equal?/2) to ch
 
 ```elixir
 mapset = MapSet.new([])
-added_mapset = MapSet.put(mapset, 1)
-MapSet.equal?(added_mapset, MapSet.new([1]))
+mapset |> MapSet.put(1) |> MapSet.equal?(MapSet.new([1]))
 ```
 
 ## MapSet.subset?/2
@@ -162,19 +179,23 @@ MapSet.equal?(added_mapset, MapSet.new([1]))
 Use [MapSet.subset?/2](https://hexdocs.pm/elixir/MapSet.html#subset?/2) to check if `MapSet.new([2, 3])` is a subset of `MapSet.new([1, 2, 3, 4])`. The result should be `true`.
 
 ```elixir
-subset = MapSet.new([2, 3])
-mapset = MapSet.new([1, 2, 3, 4])
-
 # TODO: Why is this seemingly reverse? I'm used to haystack, needle or Enum.function(full_list, operation)
-MapSet.subset?(subset, mapset)
+# subset = MapSet.new([2, 3])
+# mapset = MapSet.new([1, 2, 3, 4])
+# MapSet.subset?(subset, mapset)
+
+# If we read the text literally, this makes more sense.
+#   There's a ton of muscle memory that says a smaller set has to be checked against the bigger set.
+#   That both approaches work tells me it's a straight comparison of the 2 data structures, it enforce about length.
+mapset = MapSet.new([2, 3])
+mapset |> MapSet.subset?(MapSet.new([1, 2, 3, 4]))
 ```
 
 Use [MapSet.subset?/2](https://hexdocs.pm/elixir/MapSet.html#subset?/2) to check if `MapSet.new(["a"])` is a subset of `MapSet.new(["a", "b"])`.
 
 ```elixir
-subset = MapSet.new(["a"])
-mapset = MapSet.new(["a", "b"])
-MapSet.subset?(subset, mapset)
+mapset = MapSet.new(["a"])
+mapset |> MapSet.subset?(MapSet.new(["a", "b"]))
 ```
 
 ## MapSet.to_list/1
@@ -183,7 +204,7 @@ Use [MapSet.to_list/1](https://hexdocs.pm/elixir/MapSet.html#to_list/1) to conve
 
 ```elixir
 mapset = MapSet.new([1, 2, 3])
-MapSet.to_list(mapset)
+mapset |> MapSet.to_list()
 ```
 
 ## Commit Your Progress
