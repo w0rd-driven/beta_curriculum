@@ -111,7 +111,13 @@ end
 Enter your solution below.
 
 ```elixir
+temperature = 9
 
+if temperature > 10 do
+  :hot
+else
+  :cold
+end
 ```
 
 ## Clear Control Flow
@@ -256,7 +262,11 @@ We can provide any number of cases. Cases use pattern matching to decide which r
 Return each value from `1` to `5` by changing the `condition` variable below.
 
 ```elixir
-condition = nil
+condition = :red
+condition = "blue"
+condition = %{key: "value"}
+condition = 123
+condition = [1, 2, 3]
 
 case condition do
   :red -> 1
@@ -356,7 +366,11 @@ end
 Return each result from `1` to `5` by changing the `condition` variable below.
 
 ```elixir
-condition = nil
+condition = [1, 2, 3]
+condition = [1 | 2]
+condition = {1, 2}
+condition = %{key1: "value", key2: "value"}
+condition = {1, 2, %{key: [1, 2, 3]}}
 
 case condition do
   [1, 2, 3] -> 1
@@ -495,7 +509,14 @@ end
 </details>
 
 ```elixir
+grade = 89
 
+cond do
+  100 >= grade and grade >= 85 -> "A"
+  84 >= grade and grade >= 70 -> "B"
+  69 >= grade and grade >= 55 -> "C"
+  54 >= grade and grade >= 1 -> "D"
+end
 ```
 
 ## Unless
@@ -549,7 +570,11 @@ In the Elixir cell below
 * Create an `unless` statement. which returns `"awake"` unless `tired`.
 
 ```elixir
+tired = false
 
+unless tired do
+  "awake"
+end
 ```
 
 ## Commit Your Progress
