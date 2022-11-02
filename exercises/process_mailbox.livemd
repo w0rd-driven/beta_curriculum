@@ -71,8 +71,20 @@ defmodule Mailbox do
       :ok
   """
   def loop(state \\ []) do
+    receive do
+      {:mail, message} ->
+        new_state = [message | state]
+        IO.puts("#{inspect(new_state)}")
+        loop(new_state)
+    end
   end
 end
+
+mailbox_process = spawn(fn -> Mailbox.loop() end)
+send(mailbox_process, {:mail, "You've Got Mail!"})
+# ["You've Got Mail!"]
+send(mailbox_process, {:mail, "You've Got Mail..Again!"})
+# ["You've Got Mail..Again!", "You've Got Mail!"]
 ```
 
 ## Commit Your Progress
