@@ -71,11 +71,10 @@ defmodule Mailbox do
       :ok
   """
   def loop(state \\ []) do
+    if state != [], do: IO.puts("#{inspect(state)}")
+
     receive do
-      {:mail, message} ->
-        new_state = [message | state]
-        IO.puts("#{inspect(new_state)}")
-        loop(new_state)
+      {:mail, message} -> loop([message | state])
     end
   end
 end
