@@ -203,7 +203,42 @@ defmodule AlternateTimer do
   def seconds(timer_pid) do
     GenServer.call(timer_pid, :seconds)
   end
+
+  @impl true
+  def init(_state) do
+    increment_timer()
+    {:ok, 0}
+  end
+
+  @impl true
+  def handle_info(:increment, state) do
+    increment_timer()
+    {:noreply, state + 1}
+  end
+
+  @impl true
+  def handle_call(:seconds, _from, state) do
+    {:reply, state, state}
+  end
+
+  defp increment_timer() do
+    :timer.send_after(1000, self(), :increment)
+  end
 end
+
+{:ok, pid} = AlternateTimer.start_link([])
+# Timer.seconds(pid)
+# # :sys.get_state(pid)
+# Process.sleep(1200)
+# Timer.seconds(pid)
+# # :sys.get_state(pid)
+# Process.sleep(1200)
+# Timer.seconds(pid)
+# # :sys.get_state(pid)
+```
+
+```elixir
+AlternateTimer.seconds(pid)
 ```
 
 ## Commit Your Progress
