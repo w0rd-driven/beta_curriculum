@@ -208,6 +208,7 @@ defmodule MultiplayerScoreTracker do
       iex> {:ok, pid} = MultiplayerScoreTracker.start_link([])
   """
   def start_link(_opts) do
+    GenServer.start_link(__MODULE__, [])
   end
 
   @doc """
@@ -224,6 +225,10 @@ defmodule MultiplayerScoreTracker do
       :ok
   """
   def score(multiplayer_score_tracker_pid, player_name, amount) do
+    GenServer.cast(
+      multiplayer_score_tracker_pid,
+      {:add_score, %{player_name: player_name, amount: amount}}
+    )
   end
 
   @doc """
@@ -254,6 +259,7 @@ defmodule MultiplayerScoreTracker do
       %{player1: 10, player2: 10}
   """
   def all_scores(multiplayer_score_tracker_pid) do
+    GenServer.call(multiplayer_score_tracker_pid, :all_scores)
   end
 
   @doc """
@@ -275,8 +281,61 @@ defmodule MultiplayerScoreTracker do
     10
   """
   def get_score(multiplayer_score_tracker_pid, player_name) do
+    GenServer.call(multiplayer_score_tracker_pid, {:get_score, player_name})
+  end
+
+  @impl true
+  def init(_state) do
+    {:ok, %{}}
+  end
+
+  @impl true
+  def handle_cast({:add_score, %{player_name: player_name, amount: amount}}, state) do
+    # IO.inspect(state, label: "state")
+    # IO.inspect(player_name, label: "player_name")
+    # IO.inspect(amount, label: "amount")
+    new_state =
+      state
+      |> Map.update(player_name, amount, fn score ->
+        score + amount
+      end)
+
+    {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_call(:all_scores, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:get_score, player_name}, _from, state) do
+    {:reply, Map.get(state, player_name), state}
   end
 end
+
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.score(pid, :player1, 10)
+# MultiplayerScoreTracker.score(pid, :player2, 10)
+# MultiplayerScoreTracker.score(pid, :abc, 10)
+# :sys.get_state(pid)
+
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.all_scores(pid)
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.score(pid, :player1, 10)
+# MultiplayerScoreTracker.score(pid, :player1, 10)
+# MultiplayerScoreTracker.all_scores(pid)
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.score(pid, :player1, 10)
+# MultiplayerScoreTracker.score(pid, :player2, 10)
+# MultiplayerScoreTracker.all_scores(pid)
+
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.get_score(pid, :player1)
+# {:ok, pid} = MultiplayerScoreTracker.start_link([])
+# MultiplayerScoreTracker.score(pid, :abc, 10)
+# MultiplayerScoreTracker.get_score(pid, :abc)
 ```
 
 ## Commit Your Progress
