@@ -310,7 +310,7 @@ defmodule MultiplayerScoreTracker do
 
   @impl true
   def handle_call({:get_score, player_name}, _from, state) do
-    {:reply, Map.get(state, player_name), state}
+    {:reply, state[player_name], state}
   end
 end
 
