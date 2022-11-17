@@ -147,7 +147,9 @@ secret identities.
 ```
 
 ```elixir
-
+:ets.new(:super_heroes, [:named_table])
+:ets.insert(:super_heroes, {"Spider Man", "Peter Parker"})
+:ets.lookup(:super_heroes, "Spider Man")
 ```
 
 ## ETS Configuration
@@ -266,7 +268,15 @@ end)
 </details>
 
 ```elixir
+table = :ets.new(:example, [:ordered_set, :private])
+:ets.insert(table, {:key, "value"})
 
+# Task.start(fn ->
+#   :ets.insert(table, {:key, "value"})
+# end)
+# Task.start(fn ->
+#   :ets.lookup(table, :key) |> IO.inspect(label: "lookup result")
+# end)
 ```
 
 ## Race Conditions
@@ -291,7 +301,8 @@ ETS Table->>ETS Table: sets count = 0
     Task 2->>ETS Table: sets count = 1
 ```
 
-```
+```mermaid
+sequenceDiagram
 activate Child Process
 Child Process-->>Parent Process: pid
 deactivate Child Process
@@ -458,7 +469,8 @@ Depending on your computer, we recommend you don't use `SlowFib` with a value la
 However, `CachedFib` should handle larger numbers.
 
 ```elixir
-
+# SlowFib.of(24)
+CachedFib.of(50000)
 ```
 
 ### Your Turn
@@ -505,6 +517,33 @@ end
 ```elixir
 defmodule GenServerCache do
   use GenServer
+
+  def start_link(_opts) do
+    GenServer.start_link(__MODULE__, [])
+  end
+
+  def get(pid, value) do
+    GenServer.call(pid, {:get, key})
+  end
+
+  def set(pid, key, value) do
+    GenServer.call(pid, {:set, key, value})
+  end
+
+  @impl true
+  def init(state) do
+    {:ok, %{}}
+  end
+
+  @impl true
+  def handle_call({:get, key}, _from, state) do
+    {:reply, state[key], state}
+  end
+
+  @impl true
+  def handle_call({:set, key, value}, _from, state) do
+    {:reply, state, Map.put(state, key, value)}
+  end
 end
 ```
 
@@ -538,6 +577,20 @@ end
 
 ```elixir
 defmodule ETSCache do
+  def new(opts \\ []) do
+    :ets.new(:cache, opts)
+  end
+
+  def get(table, key) do
+    case :ets.lookup(table, key) do
+      [{key, value}] -> value
+      _ -> nil
+    end
+  end
+
+  def set(table, key, value) do
+    :ets.insert(table, {key, value})
+  end
 end
 ```
 
