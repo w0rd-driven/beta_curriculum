@@ -106,7 +106,13 @@ end
 </details>
 
 ```elixir
+defmodule Math do
+  def add(number1, number2) do
+    number1 + number2
+  end
+end
 
+Math.add(5, 2)
 ```
 
 ## Internal Module Functions
@@ -137,6 +143,10 @@ defmodule InspectorGadget do
 
   def necktie do
     gogo("necktie")
+  end
+
+  def arms do
+    gogo("arms")
   end
 end
 
@@ -175,6 +185,10 @@ InspectorGadget.arms()
 ```
 
 </details>
+
+```elixir
+InspectorGadget.arms()
+```
 
 ## Private Functions
 
@@ -338,7 +352,13 @@ end
 Enter your solution below.
 
 ```elixir
+defmodule Languages.Spanish do
+  def greeting do
+    "Hola"
+  end
+end
 
+Languages.Spanish.greeting()
 ```
 
 ### Nested Modules
@@ -377,8 +397,8 @@ We use the `@` symbol to define a compile-time module attribute.
 
 ```elixir
 defmodule Hero do
-  @name "Spider-Man"
-  @nemesis "Green Goblin"
+  @name "Super man"
+  @nemesis "Lex Luthor"
 
   def introduce do
     "Hello, my name is #{@name}!"
@@ -530,7 +550,51 @@ end
 </details>
 
 ```elixir
+defmodule Math do
+  @moduledoc """
+  Math
 
+  Execute common math assignments.
+  """
+
+  @doc """
+  Returns a personalized greeting for one person.
+
+  ## Examples
+
+    iex> Greeter.greet("Bill")
+    "Hello Bill!"
+  """
+
+  @doc """
+  Adds two numbers together.
+
+  ## Examples
+
+    iex> Math.add(2, 5)
+    7
+  """
+  def add(number1, number2) do
+    number1 + number2
+  end
+
+  @doc """
+  Adds three numbers together.
+
+  ## Examples
+
+    iex> Math.add(1, 2, 3)
+    6
+  """
+  def add(number1, number2, number3) do
+    number1 + number2 + number3
+  end
+end
+
+# 7
+Math.add(2, 5)
+# 6
+Math.add(1, 2, 3)
 ```
 
 ## Default Arguments
@@ -594,7 +658,14 @@ This sometimes results in some confusion with the function's arity, and the numb
 In the Elixir cell below, define a module with a function that uses a default argument.
 
 ```elixir
+defmodule Example do
+  def test(name \\ "1, 2, 3") do
+    "Testing: #{name}"
+  end
+end
 
+Example.test()
+Example.test("The boundaries of space and time.")
 ```
 
 ## Documentation
