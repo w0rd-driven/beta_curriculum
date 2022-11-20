@@ -83,6 +83,21 @@ defmodule RockPaperScissorsLizardSpock do
     false
   """
   def beats?(guess1, guess2) do
+    case {guess1, guess2} do
+      {:rock, :lizard} -> true
+      {:spock, :scissors} -> true
+      {:scissors, :lizard} -> true
+      {:lizard, :paper} -> true
+      {:paper, :spock} -> true
+      {:spock, :rock} -> true
+      {:lizard, :rock} -> false
+      {:scissors, :spock} -> false
+      {:lizard, :scissors} -> false
+      {:paper, :lizard} -> false
+      {:spock, :paper} -> false
+      {:rock, :spock} -> false
+      {_, _} -> false
+    end
   end
 
   @doc """
@@ -97,8 +112,38 @@ defmodule RockPaperScissorsLizardSpock do
     "Player 1 Wins!"
   """
   def play(player1, player2) do
+    cond do
+      beats?(player1, player2) -> "Player 1 Wins!"
+      beats?(player2, player1) -> "Player 2 Wins!"
+      player1 == player2 -> "Draw"
+    end
   end
 end
+
+RockPaperScissorsLizardSpock.beats?(:rock, :lizard)
+RockPaperScissorsLizardSpock.beats?(:spock, :scissors)
+RockPaperScissorsLizardSpock.beats?(:scissors, :lizard)
+RockPaperScissorsLizardSpock.beats?(:lizard, :paper)
+RockPaperScissorsLizardSpock.beats?(:paper, :spock)
+RockPaperScissorsLizardSpock.beats?(:spock, :rock)
+# true
+
+RockPaperScissorsLizardSpock.beats?(:lizard, :rock)
+RockPaperScissorsLizardSpock.beats?(:scissors, :spock)
+RockPaperScissorsLizardSpock.beats?(:lizard, :scissors)
+RockPaperScissorsLizardSpock.beats?(:paper, :lizard)
+RockPaperScissorsLizardSpock.beats?(:spock, :paper)
+RockPaperScissorsLizardSpock.beats?(:rock, :spock)
+# false
+
+RockPaperScissorsLizardSpock.play(:lizard, :rock)
+# "Player 2 Wins!"
+
+RockPaperScissorsLizardSpock.play(:rock, :lizard)
+# "Player 1 Wins!"
+
+RockPaperScissorsLizardSpock.play(:rock, :rock)
+# Draw
 ```
 
 ## Commit Your Progress
