@@ -60,6 +60,8 @@ defmodule Character do
 
   Defines a character struct, and functions for creating character dialogue.
   """
+  @enforce_keys [:name]
+  defstruct @enforce_keys ++ [:class, :weapon]
 
   @doc """
   Introduce the character by name.
@@ -73,6 +75,7 @@ defmodule Character do
      "My name is Aragorn."
   """
   def introduce(character) do
+    "My name is #{character.name}."
   end
 
   @doc """
@@ -87,6 +90,11 @@ defmodule Character do
     "I attack with my sword!"
   """
   def attack(character) do
+    if character.weapon != nil do
+      "I attack with my #{character.weapon}!"
+    else
+      "I attack!"
+    end
   end
 
   @doc """
@@ -94,13 +102,18 @@ defmodule Character do
 
   ## Examples
 
-    iex> Character.class(%Character{name: "Gimli", class: "warrior"})
-    "I am a warrior."
+    # iex> Character.class(%Character{name: "Gimli", class: "warrior"})
+    # "I am a warrior."
 
-    iex> Character.class(%Character{name: "Aragorn", class: "ranger"})
-    "I am a ranger."
+    # iex> Character.class(%Character{name: "Aragorn", class: "ranger"})
+    # "I am a ranger."
   """
   def class(character) do
+    if character.class != nil do
+      "I am a #{character.class}."
+    else
+      "I am a vagabond."
+    end
   end
 
   @doc """
@@ -115,6 +128,11 @@ defmodule Character do
     "My name is Aragorn and I am a ranger!"
   """
   def war_cry(character) do
+    if character.class != nil do
+      "My name is #{character.name} and I am a #{character.class}!"
+    else
+      "My name is #{character.name} and I am a vagabond!"
+    end
   end
 
   @doc """
@@ -129,8 +147,38 @@ defmodule Character do
     "My name is Aragorn and I have defeated the warrior Gimli!"
   """
   def defeat(character1, character2) do
+    if character2.class != nil do
+      "My name is #{character1.name} and I have defeated the #{character2.class} #{character2.name}!"
+    else
+      "My name is #{character1.name} and I have defeated the vagabond #{character2.name}!"
+    end
   end
 end
+
+Character.introduce(%Character{name: "Gimli"})
+# "My name is Gimli."
+Character.introduce(%Character{name: "Aragorn"})
+# "My name is Aragorn."
+
+Character.attack(%Character{name: "Gimli", weapon: "axe"})
+# "I attack with my axe!"
+Character.attack(%Character{name: "Aragorn", weapon: "sword"})
+# "I attack with my sword!"
+
+Character.class(%Character{name: "Gimli", class: "warrior"})
+# "I am a warrior."
+Character.class(%Character{name: "Aragorn", class: "ranger"})
+# "I am a ranger."
+
+Character.war_cry(%Character{name: "Gimli", class: "warrior"})
+# "My name is Gimli and I am a warrior!"
+Character.war_cry(%Character{name: "Aragorn", class: "ranger"})
+# "My name is Aragorn and I am a ranger!"
+
+Character.defeat(%Character{name: "Gimli"}, %Character{name: "Aragorn", class: "ranger"})
+# "My name is Gimli and I have defeated the ranger Aragorn!"
+Character.defeat(%Character{name: "Aragorn"}, %Character{name: "Gimli", class: "warrior"})
+# "My name is Aragorn and I have defeated the warrior Gimli!"
 ```
 
 ### Bonus: Character Instances
@@ -175,7 +223,27 @@ Character.introduce(aragorn)
 Enter your solution below.
 
 ```elixir
+aragorn = %Character{
+  name: "Aragorn",
+  class: "ranger",
+  weapon: "sword"
+}
 
+gandalf = %Character{
+  name: "Gandalf",
+  class: "wizard",
+  weapon: "staff"
+}
+
+gimli = %Character{
+  name: "Gimli",
+  class: "warrior",
+  weapon: "axe"
+}
+
+Character.introduce(aragorn)
+Character.class(gandalf)
+Character.war_cry(gimli)
 ```
 
 ### Bonus: Handle `nil` Fields.
@@ -197,6 +265,17 @@ Character.attack(%Character{name: "Gimli"})
 ```
 
 You have complete creative control over how you would like to change the dialogue when fields used the the body of the functions above are `nil`.
+
+```elixir
+Character.attack(%Character{name: "Gimli"})
+# "I attack!"
+Character.class(%Character{name: "Gimli"})
+# "I am a vagabond."
+Character.war_cry(%Character{name: "Gimli"})
+# "My name is Gimli and I am a vagabond!"
+Character.defeat(%Character{name: "Gimli"}, %Character{name: "Gandalf"})
+# "My name is Gimli and I have defeated the vagabond Gandalf!"
+```
 
 ## Commit Your Progress
 
