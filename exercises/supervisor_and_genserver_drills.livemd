@@ -50,7 +50,17 @@ end
 </details>
 
 ```elixir
+defmodule Zero do
+  use GenServer
 
+  @impl true
+  def init(_state) do
+    {:ok, 0}
+  end
+end
+
+{:ok, pid} = GenServer.start_link(Zero, "")
+:sys.get_state(pid)
 ```
 
 Use [GenServer.start_link/3](https://hexdocs.pm/elixir/GenServer.html#start_link/3) to start your `Zero` [GenServer](https://hexdocs.pm/elixir/GenServer.html) as a named process.
@@ -65,7 +75,8 @@ GenServer.start_link(Zero, "init_arg", [name: :my_name])
 </details>
 
 ```elixir
-
+GenServer.start_link(Zero, "", name: :zero)
+:sys.get_state(:zero)
 ```
 
 Create a `SimpleCounter` [GenServer](https://hexdocs.pm/elixir/GenServer.html) whose state starts as `0`. Implement a [GenServer.handle_call/3](https://hexdocs.pm/elixir/GenServer.html#handle_call/3) callback function which accepts the `:increment` message and increments the state by `1` and returns `:ok`.
@@ -98,10 +109,26 @@ GenServer.call(pid, :increment)
 </details>
 
 ```elixir
+defmodule SimpleCounter do
+  use GenServer
 
+  @impl true
+  def init(_state) do
+    {:ok, 0}
+  end
+
+  @impl true
+  def handle_call(:increment, _from, state) do
+    {:reply, :ok, state + 1}
+  end
+end
+
+GenServer.start_link(SimpleCounter, "", name: :simple_counter)
+GenServer.call(:simple_counter, :increment)
+:sys.get_state(:simple_counter)
 ```
 
-Create an `InitialState` [GenServer](https://hexdocs.pm/elixir/GenServer.html) whose initial state can be configured. Call [GenServer.start_link/3](https://hexdocs.pm/elixir/GenServer.html#start_link/3) to spawn a `State` GenServer with an initial state. Use `:sys.get_state/1` to confirm the state matches your configured state.
+Create an `InitialState` [GenServer](https://hexdocs.pm/elixir/GenServer.html) whose initial state can be configured. Call [GenServer.start_link/3](https://hexdocs.pm/elixir/GenServer.html#start_link/3) to spawn a `InitialState` GenServer with an initial state. Use `:sys.get_state/1` to confirm the state matches your configured state.
 
 <details style="background-color: lightgreen; padding: 1rem; margin: 1rem 0;">
 <summary>Example Solution</summary>
@@ -124,7 +151,17 @@ end
 </details>
 
 ```elixir
+defmodule InitialState do
+  use GenServer
 
+  @impl true
+  def init(state) do
+    {:ok, state}
+  end
+end
+
+GenServer.start_link(InitialState, "some state", name: :initial_state)
+:sys.get_state(:initial_state)
 ```
 
 Create a `State` module.
@@ -182,7 +219,41 @@ State.set(pid, "updated state")
 </details>
 
 ```elixir
+defmodule State do
+  use GenServer
 
+  def start_link(state) do
+    GenServer.start_link(__MODULE__, state)
+  end
+
+  def get(pid) do
+    GenServer.call(pid, :get)
+  end
+
+  def set(pid, state) do
+    GenServer.call(pid, {:set, state})
+  end
+
+  @impl true
+  def init(state) do
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_call(:get, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:set, new_state}, _from, _state) do
+    {:reply, new_state, new_state}
+  end
+end
+
+{:ok, pid} = State.start_link("state")
+"state" = State.get(pid)
+State.set(pid, "updated")
+"updated" = State.get(pid)
 ```
 
 Create a minimal `Named` [GenServer](https://hexdocs.pm/elixir/GenServer.html) that can be started and configured as a named process using `Named.start_link/1`. Start a `Named` process and use [GenServer.whereis/1](https://hexdocs.pm/elixir/GenServer.html#whereis/1) and/or [Process.whereis/1](https://hexdocs.pm/elixir/Process.html#whereis/1) to find the pid of the named process.
@@ -211,7 +282,22 @@ Process.whereis(:my_configured_name)
 </details>
 
 ```elixir
+defmodule Named do
+  use GenServer
 
+  def start_link(opts) do
+    name = Keyword.get(opts, :name, __MODULE__)
+    GenServer.start_link(__MODULE__, [], name: name)
+  end
+
+  @impl true
+  def init(_state) do
+    {:ok, 0}
+  end
+end
+
+# Named.start_link([name: :named])
+# Process.whereis(:named)
 ```
 
 Create a minimal `NamedState` [GenServer](https://hexdocs.pm/elixir/GenServer.html) that can be started and configured as a named process with a configurable state using `NamedState.start_link`. Use `:sys.get_state/1` to confirm the initial state is as expected and [GenServer.whereis/1](https://hexdocs.pm/elixir/GenServer.html#whereis/1) and/or [Process.whereis/1](https://hexdocs.pm/elixir/Process.html#whereis/1) to find the pid of the named process.
@@ -266,7 +352,22 @@ Process.whereis(:keyword_list_example)
 </details>
 
 ```elixir
+defmodule NamedState do
+  use GenServer
 
+  def start_link(state, opts \\ []) do
+    name = Keyword.get(opts, :name, __MODULE__)
+    GenServer.start_link(__MODULE__, state, name: name)
+  end
+
+  @impl true
+  def init(state) do
+    {:ok, state}
+  end
+end
+
+# NamedState.start_link("initial", name: :named_state)
+# Process.whereis(:named_state)
 ```
 
 ## Supervisor
@@ -309,7 +410,10 @@ Supervisor.start_link([], strategy: :one_for_one)
 </details>
 
 ```elixir
+children = []
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Use [Supervisor.start_link/3](https://hexdocs.pm/elixir/Supervisor.html#start_link/3) function to start a supervisor with the `Worker` as a child using the **map** syntax.
@@ -331,7 +435,15 @@ Supervisor.start_link(children, strategy: :one_for_one)
 </details>
 
 ```elixir
+children = [
+  %{
+    id: :worker1,
+    start: {Worker, :start_link, [""]}
+  }
+]
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Use [Supervisor.start_link/3](https://hexdocs.pm/elixir/Supervisor.html#start_link/3) function to start a supervisor three `Worker` children using the **map** syntax.
@@ -361,7 +473,23 @@ Supervisor.start_link(children, strategy: :one_for_one)
 </details>
 
 ```elixir
+children = [
+  %{
+    id: :worker1,
+    start: {Worker, :start_link, [""]}
+  },
+  %{
+    id: :worker2,
+    start: {Worker, :start_link, [""]}
+  },
+  %{
+    id: :worker3,
+    start: {Worker, :start_link, [""]}
+  }
+]
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Use [Supervisor.start_link/3](https://hexdocs.pm/elixir/Supervisor.html#start_link/3) function to start a supervisor with the `Worker` as a child using the **tuple** syntax.
@@ -380,7 +508,12 @@ Supervisor.start_link(children, strategy: :one_for_one)
 </details>
 
 ```elixir
+children = [
+  {Worker, ""}
+]
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Use [Supervisor.start_link/3](https://hexdocs.pm/elixir/Supervisor.html#start_link/3) function to start a supervisor with the `Worker` as a child using the **map** syntax to start the `Worker` process as a named process.
@@ -402,7 +535,15 @@ Supervisor.start_link(children, strategy: :one_for_one)
 </details>
 
 ```elixir
+chilren = [
+  %{
+    id: :worker1,
+    start: {Worker, :start_link, "", name: :worker1}
+  }
+]
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Usually worker GenServers should define a `start_link/1` function to start under a supervision tree. However, this is idiomatic and we can (but usually shouldn't) break this rule.
@@ -437,6 +578,24 @@ defmodule NonIdiomatic do
     {:ok, "initial state"}
   end
 end
+
+chilren = [
+  %{
+    id: :non_idiomatic1,
+    start: {NonIdiomatic, :starter, ["", "", ""]}
+  }
+]
+
+# Also works because the last argument is a keyword list
+# chilren = [
+#   %{
+#     id: :non_idiomatic1,
+#     start: {NonIdiomatic, :starter, "", "", ""}
+#   }
+# ]
+
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 Use [Supervisor.start_link/3](https://hexdocs.pm/elixir/Supervisor.html#start_link/3) function to start a supervisor with three `Worker` children using the **tuple** syntax.
@@ -461,7 +620,14 @@ Supervisor.start_link(children, strategy: :one_for_one)
 </details>
 
 ```elixir
+chilren = [
+  {Worker, ""},
+  {Worker, ""},
+  {Worker, ""}
+]
 
+{:ok, pid} = Supervisor.start_link(children, strategy: :one_for_one)
+Supervisor.which_children(pid)
 ```
 
 ## Mix Projects
