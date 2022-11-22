@@ -77,6 +77,8 @@ defmodule FileSearch do
   ["file1.txt", "file2.txt", "file3.txt", "file4.txt"]
   """
   def all(folder) do
+    Path.wildcard(Path.join(folder, "**/*.*"))
+    |> Enum.map(&Path.basename/1)
   end
 
   @doc """
@@ -107,8 +109,18 @@ defmodule FileSearch do
   }
   """
   def by_extension(folder) do
+    all(folder)
+    |> Enum.reduce(%{}, fn file_name, accumulator ->
+      extension = Path.extname(file_name)
+      Map.update(accumulator, extension, [file_name], &[file_name | &1])
+      # Map.update(accumulator, extension, [file_name], fn files ->
+      #   [file_name | files]
+      # end)
+    end)
   end
 end
+
+FileSearch.by_extension("reading")
 ```
 
 ### Configure Project As A Script
