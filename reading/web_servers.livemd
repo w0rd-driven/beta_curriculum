@@ -79,7 +79,7 @@ C--> S: close connection
 Below, we simulate a web server that accepts only a single request, and returns `"Hello, world!"` to the client. We then send the web server a [HTTPoison.get!/3](https://hexdocs.pm/httpoison/HTTPoison.html#get!/3) request and receive a response from the server.
 
 ```elixir
-port = 4000
+port = 4001
 
 spawn(fn ->
   # start socket
@@ -130,7 +130,7 @@ defmodule WebServer do
 
     # send response
     current_time = Time.to_string(Time.utc_now())
-    response = "HTTP/1.1 200\r\nContent-Type: text/html\r\n\r\n It is #{current_time}"
+    response = "HTTP/1.1 200\r\nContent-Type: text/html\r\n\r\n <h1>It is #{current_time}<h1/>"
     :gen_tcp.send(connection, response)
 
     # close connection
@@ -140,7 +140,7 @@ defmodule WebServer do
   end
 end
 
-WebServer.start(4000)
+WebServer.start(4001)
 ```
 
 This server will remain open indefinitely and recursively call `accept/2` every time a new client connects to the socket on port `4000`.
