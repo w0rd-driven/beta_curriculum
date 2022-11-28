@@ -6,7 +6,8 @@ Mix.install([
   {:youtube, github: "brooklinjazz/youtube"},
   {:hidden_cell, github: "brooklinjazz/hidden_cell"},
   {:httpoison, "~> 1.8"},
-  {:poison, "~> 5.0"}
+  {:poison, "~> 5.0"},
+  {:req, "~> 0.3.2"}
 ])
 ```
 
@@ -76,6 +77,216 @@ Here's that data represented as a `Pokemon` struct.
   weight: 905,
   types: ["fire", "flying"]
 }
+```
+
+```elixir
+# From https://thibautbarrere.com/2022/09/09/implementing-a-disk-cache-for-elixir-req
+defmodule CustomCache do
+  @moduledoc """
+  A simple HTTP cache for `req` that do not use headers. 
+  If the file is not found on disk, the download will occur,
+  otherwise response will be read from disk.
+  """
+  require Logger
+
+  def attach(%Req.Request{} = request, options \\ []) do
+    request
+    |> Req.Request.register_options([:custom_cache_dir])
+    |> Req.Request.merge_options(options)
+    |> Req.Request.append_request_steps(custom_cache: &request_local_cache_step/1)
+    |> Req.Request.prepend_response_steps(custom_cache: &response_local_cache_step/1)
+  end
+
+  def request_local_cache_step(request) do
+    # TODO: handle a form of expiration - for now it is
+    # acceptable to wipe out the whole folder manually for me
+    # NOTE: race condition here, for parallel queries
+    if File.exists?(path = cache_path(request)) do
+      # Logger.info("File found in cache (#{path})")
+      # a request step can return a {req,resp} tuple,
+      # and this will bypass the remaining request steps
+      {request, load_cache(path)}
+    else
+      request
+    end
+  end
+
+  def response_local_cache_step({request, response}) do
+    unless File.exists?(path = cache_path(request)) do
+      if response.status == 200 do
+        # Logger.info("Saving file to cache (#{path})")
+        write_cache(path, response)
+      else
+        Logger.info("Status is #{response.status}, not saving file to disk")
+      end
+    end
+
+    {request, response}
+  end
+
+  # https://github.com/wojtekmach/req/blob/102b9aa6c6ff66f00403054a0093c4f06f6abc2f/lib/req/steps.ex#L1268
+  def cache_path(cache_dir, request = %{method: :get}) do
+    cache_key =
+      Enum.join(
+        [
+          request.url.host,
+          Atom.to_string(request.method),
+          :crypto.hash(:sha256, :erlang.term_to_binary(request.url))
+          |> Base.encode16(case: :lower)
+        ],
+        "-"
+      )
+
+    Path.join(cache_dir, cache_key)
+  end
+
+  def cache_path(request) do
+    cache_path(request.options[:custom_cache_dir], request)
+  end
+
+  # https://github.com/wojtekmach/req/blob/102b9aa6c6ff66f00403054a0093c4f06f6abc2f/lib/req/steps.ex#L1288-L1290
+  def load_cache(path) do
+    path |> File.read!() |> :erlang.binary_to_term()
+  end
+
+  # https://github.com/wojtekmach/req/blob/102b9aa6c6ff66f00403054a0093c4f06f6abc2f/lib/req/steps.ex#L1283-L1286
+  def write_cache(path, response) do
+    File.mkdir_p!(Path.dirname(path))
+    File.write!(path, :erlang.term_to_binary(response))
+  end
+end
+
+defmodule Pokelixir do
+  @enforce_keys [
+    :id,
+    :name,
+    :hp,
+    :attack,
+    :defense,
+    :special_attack,
+    :special_defense,
+    :speed,
+    :height,
+    :weight,
+    :types
+  ]
+  defstruct @enforce_keys
+
+  @base_url "https://pokeapi.co/api/v2/pokemon"
+
+  def get(name) do
+    cache_dir = Path.join(__ENV__.file, "../cache-dir") |> Path.expand()
+
+    req =
+      Req.new(url: "#{@base_url}/#{name}", cache: true)
+      |> CustomCache.attach(custom_cache_dir: cache_dir)
+
+    Req.get!(req).body
+    |> transform_pokemon()
+  end
+
+  def all() do
+    cache_dir = Path.join(__ENV__.file, "../cache-dir") |> Path.expand()
+
+    req =
+      Req.new(url: "#{@base_url}", cache: true)
+      |> CustomCache.attach(custom_cache_dir: cache_dir)
+
+    # Cheating to get the first 500 without pagination
+    Req.get!(req, params: [limit: 500], cache: true).body
+    |> transform_results()
+  end
+
+  defp transform_pokemon(json) do
+    # We pattern match to get our deeply nested values.
+    #   One day I'll figure out a different way to do this.
+    #   That's not today apparently.
+    # I lied apparently, apparently.
+    stats =
+      if json["stats"] == nil do
+        %{}
+      else
+        Enum.reduce(json["stats"], %{}, fn stat, accumulator ->
+          Map.put(accumulator, stat["stat"]["name"], stat["base_stat"])
+        end)
+      end
+
+    # IO.inspect(json["stats"], label: "json[stats]")
+    # IO.inspect(stats, label: "stats")
+    # [
+    #   %{
+    #     "base_stat" => hp,
+    #     "stat" => %{"name" => "hp"}
+    #   },
+    #   %{
+    #     "base_stat" => attack,
+    #     "stat" => %{
+    #       "name" => "attack"
+    #     }
+    #   },
+    #   %{
+    #     "base_stat" => defense,
+    #     "stat" => %{
+    #       "name" => "defense"
+    #     }
+    #   },
+    #   %{
+    #     "base_stat" => special_attack,
+    #     "stat" => %{
+    #       "name" => "special-attack"
+    #     }
+    #   },
+    #   %{
+    #     "base_stat" => special_defense,
+    #     "stat" => %{
+    #       "name" => "special-defense"
+    #     }
+    #   },
+    #   %{
+    #     "base_stat" => speed,
+    #     "stat" => %{"name" => "speed"}
+    #   }
+    # ] = json["stats"]
+
+    types =
+      if json["types"] == nil do
+        %{}
+      else
+        Enum.map(json["types"], fn type ->
+          type["type"]["name"]
+          # %{
+          #   "type" => %{"name" => name}
+          # } = type
+          # name
+        end)
+      end
+
+    # IO.inspect(types, label: "types")
+    %Pokelixir{
+      id: json["id"],
+      name: json["name"],
+      hp: stats["hp"],
+      attack: stats["attack"],
+      defense: stats["defense"],
+      special_attack: stats["special-attack"],
+      special_defense: stats["special-defense"],
+      speed: stats["speed"],
+      height: json["height"],
+      weight: json["weight"],
+      types: types
+    }
+  end
+
+  defp transform_results(json) do
+    Enum.map(json["results"], fn result ->
+      get(result["name"])
+    end)
+  end
+end
+
+# Pokelixir.get("charizard")
+# Pokelixir.get("charmander")
+Pokelixir.all()
 ```
 
 ## Get A Pokemon
@@ -254,10 +465,10 @@ Consider refactoring, adding documentation, and testing if you have not already 
 
 This project is designed to be extendable to improve your skills. Here are some examples of how to expand the initial feature set.
 
-* Add a cache which caches each pokemon to retrieved to avoid re-requesting the same data from the API.
-* Add more endpoints from the Pokemon API. see: https://pokeapi.co/docs/v2.
-* Add more information to the `Pokemon` struct to make it more closely represent the data from the Pokemon API.
-* Add documentation + doctests and [publish your project on hex.pm](https://hex.pm/docs/publish)
+* [x] Add a cache which caches each pokemon to retrieved to avoid re-requesting the same data from the API.
+* [ ] Add more endpoints from the Pokemon API. see: https://pokeapi.co/docs/v2.
+* [ ] Add more information to the `Pokemon` struct to make it more closely represent the data from the Pokemon API.
+* [ ] Add documentation + doctests and [publish your project on hex.pm](https://hex.pm/docs/publish)
 
 ## Commit Your Progress
 
